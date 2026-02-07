@@ -1,0 +1,38 @@
+steps:
+  # 1. Build & Push Backend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/ransomsim-backend', './backend']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/ransomsim-backend']
+
+  # 2. Build & Push Frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/ransomsim-frontend', './frontend']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/ransomsim-frontend']
+
+  # 3. Deploy Backend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'ransomsim-backend'
+      - '--image=gcr.io/$PROJECT_ID/ransomsim-backend'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=GEMINI_MODEL=gemini-3-flash-preview'
+      - '--set-secrets=GEMINI_API_KEY=GEMINI_API_KEY:latest' # References Secret Manager
+
+  # 4. Deploy Frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'ransomsim-frontend'
+      - '--image=gcr.io/$PROJECT_ID/ransomsim-frontend'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
