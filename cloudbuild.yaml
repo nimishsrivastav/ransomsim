@@ -23,7 +23,7 @@ steps:
       - '--platform=managed'
       - '--allow-unauthenticated'
       - '--set-env-vars=GEMINI_MODEL=gemini-3-flash-preview'
-      - '--set-secrets=GEMINI_API_KEY=GEMINI_API_KEY:latest' # References Secret Manager
+      - '--set-secrets=GEMINI_API_KEY=GEMINI_API_KEY:latest'
 
   # 4. Deploy Frontend to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -36,3 +36,7 @@ steps:
       - '--region=us-central1'
       - '--platform=managed'
       - '--allow-unauthenticated'
+
+# This section resolves the logging error
+options:
+  logging: CLOUD_LOGGING_ONLY
