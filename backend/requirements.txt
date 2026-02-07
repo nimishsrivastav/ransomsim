@@ -1,0 +1,28 @@
+# Core Framework
+fastapi==0.128.1
+uvicorn==0.40.0
+pydantic==2.12.5
+pydantic-settings==2.12.0
+
+# Google Gemini AI SDK
+google-genai==1.62.0
+
+# HTTP & Async
+httpx==0.28.1
+aiofiles==25.1.0
+
+# Utilities
+python-dotenv==1.2.1
+python-json-logger==4.0.0
+
+# Validation
+email-validator==2.3.0
+
+# CORS & Security
+python-multipart==0.0.22
+
+# Date and Time Handling
+python-dateutil==2.9.0.post0
+
+# Rate Limiting
+slowapi==0.1.9
