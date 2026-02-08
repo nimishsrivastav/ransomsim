@@ -35,11 +35,11 @@ steps:
     args:
       - '-c'
       - |
-        BACKEND_URL=$(gcloud run services describe ransomsim-backend \
+        BACKEND_URL=$$(gcloud run services describe ransomsim-backend \
           --region=us-central1 \
           --format='value(status.url)')
-        echo $BACKEND_URL > /workspace/backend_url.txt
-        echo "Backend URL: $BACKEND_URL"
+        echo $$BACKEND_URL > /workspace/backend_url.txt
+        echo "Backend URL: $$BACKEND_URL"
 
   # 4. Build Frontend with Backend URL
   - name: 'gcr.io/cloud-builders/docker'
@@ -47,11 +47,11 @@ steps:
     args:
       - '-c'
       - |
-        BACKEND_URL=$(cat /workspace/backend_url.txt)
+        BACKEND_URL=$$(cat /workspace/backend_url.txt)
         docker build \
           -t gcr.io/$PROJECT_ID/ransomsim-frontend \
           -f Dockerfile.frontend \
-          --build-arg NEXT_PUBLIC_API_URL=$BACKEND_URL \
+          --build-arg NEXT_PUBLIC_API_URL=$$BACKEND_URL \
           .
 
   - name: 'gcr.io/cloud-builders/docker'
@@ -63,7 +63,7 @@ steps:
     args:
       - '-c'
       - |
-        FRONTEND_URL=$(gcloud run deploy ransomsim-frontend \
+        FRONTEND_URL=$$(gcloud run deploy ransomsim-frontend \
           --image=gcr.io/$PROJECT_ID/ransomsim-frontend \
           --region=us-central1 \
           --platform=managed \
@@ -73,12 +73,12 @@ steps:
           --timeout=60 \
           --quiet \
           --format='value(status.url)')
-        echo "Frontend URL: $FRONTEND_URL"
+        echo "Frontend URL: $$FRONTEND_URL"
 
         # 6. Update Backend CORS
         gcloud run services update ransomsim-backend \
           --region=us-central1 \
-          --update-env-vars=ALLOWED_ORIGINS="$FRONTEND_URL,http://localhost:3000" \
+          --update-env-vars=ALLOWED_ORIGINS="$$FRONTEND_URL,http://localhost:3000" \
           --quiet
 
 options:
