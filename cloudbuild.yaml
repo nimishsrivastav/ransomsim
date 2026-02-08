@@ -1,17 +1,18 @@
 steps:
   # 1. Build & Push Backend
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/ransomsim-backend', './backend']
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ransomsim-backend'
+      - '-f'
+      - 'Dockerfile.backend'
+      - '.'
+
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/ransomsim-backend']
 
-  # 2. Build & Push Frontend
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/ransomsim-frontend', './frontend']
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/ransomsim-frontend']
-
-  # 3. Deploy Backend to Cloud Run
+  # 2. Deploy Backend to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -22,21 +23,62 @@ steps:
       - '--region=us-central1'
       - '--platform=managed'
       - '--allow-unauthenticated'
-      - '--set-env-vars=GEMINI_MODEL=gemini-3-flash-preview'
+      - '--set-env-vars=GEMINI_MODEL=gemini-2.0-flash-exp'
       - '--set-secrets=GEMINI_API_KEY=GEMINI_API_KEY:latest'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--timeout=900'
 
-  # 4. Deploy Frontend to Cloud Run
+  # 3. Get Backend URL
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
+    entrypoint: bash
     args:
-      - 'run'
-      - 'deploy'
-      - 'ransomsim-frontend'
-      - '--image=gcr.io/$PROJECT_ID/ransomsim-frontend'
-      - '--region=us-central1'
-      - '--platform=managed'
-      - '--allow-unauthenticated'
+      - '-c'
+      - |
+        BACKEND_URL=$(gcloud run services describe ransomsim-backend \
+          --region=us-central1 \
+          --format='value(status.url)')
+        echo $BACKEND_URL > /workspace/backend_url.txt
+        echo "Backend URL: $BACKEND_URL"
 
-# This section resolves the logging error
+  # 4. Build Frontend with Backend URL
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ransomsim-frontend'
+      - '-f'
+      - 'Dockerfile.frontend'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=$(cat /workspace/backend_url.txt)'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/ransomsim-frontend']
+
+  # 5. Deploy Frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        FRONTEND_URL=$(gcloud run deploy ransomsim-frontend \
+          --image=gcr.io/$PROJECT_ID/ransomsim-frontend \
+          --region=us-central1 \
+          --platform=managed \
+          --allow-unauthenticated \
+          --memory=512Mi \
+          --cpu=1 \
+          --timeout=60 \
+          --quiet \
+          --format='value(status.url)')
+        echo "Frontend URL: $FRONTEND_URL"
+
+        # 6. Update Backend CORS
+        gcloud run services update ransomsim-backend \
+          --region=us-central1 \
+          --update-env-vars=ALLOWED_ORIGINS="$FRONTEND_URL,http://localhost:3000" \
+          --quiet
+
 options:
   logging: CLOUD_LOGGING_ONLY
