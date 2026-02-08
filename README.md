@@ -30,7 +30,7 @@ RansomSim provides interactive simulations where Gemini role-plays as different 
 |-------|-----------|
 | Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion |
 | Backend | Python 3.12, FastAPI, Pydantic |
-| AI | Google Gemini (via `google-genai` SDK) |
+| AI | Google Gemini 3 (via `google-genai` SDK) |
 | Deployment | Docker, Docker Compose |
 
 ## Getting Started
@@ -90,10 +90,10 @@ npm run dev
 ## How It Works
 
 ```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────────┐
-│  Configure   │────▶│   Generate   │────▶│  Negotiate   │────▶│   Analyze    │
-│  Scenario    │     │   Scenario   │     │  (Chat UI)   │     │  Performance │
-└─────────────┘     └──────────────┘     └─────────────┘     └──────────────┘
+┌─────────────┐      ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+│  Configure  │────▶│   Generate   │ ────▶│  Negotiate   │────▶│   Analyze    │
+│  Scenario   │      │   Scenario   │      │  (Chat UI)   │      │  Performance │
+└─────────────┘      └──────────────┘      └──────────────┘      └──────────────┘
   Org size,           AI creates a         Multi-turn           Scorecard,
   industry,           realistic breach     conversation         tactical
   persona             narrative            with threat actor    insights
